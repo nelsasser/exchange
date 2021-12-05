@@ -27,8 +27,8 @@ macro_rules! ask {
 mod tests {
     use uuid::Uuid;
     use uuid::v1::Context;
-    use crate::book::book::*;
-    use crate::book::order::*;
+    use crate::orderbook::book::*;
+    use crate::orderbook::order::*;
     use rust_decimal::prelude::Decimal;
 
     fn trader() -> Uuid {

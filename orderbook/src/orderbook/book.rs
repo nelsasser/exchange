@@ -6,7 +6,7 @@ use rust_decimal::prelude::{Decimal, Zero};
 use rand;
 use serde::{Serialize, Deserialize};
 
-use crate::book::order::{timestamp, generate_uuid, OrderDirection, LimitOrder};
+use crate::orderbook::order::{timestamp, generate_uuid, OrderDirection, LimitOrder};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BookRequest {
@@ -35,19 +35,6 @@ pub struct OpenEvent {
     pub(crate) direction: OrderDirection,
     pub(crate) timestamp: i64,
     uuid: Option<Uuid>,
-}
-
-impl OpenEvent {
-    pub fn new(owner: Uuid, price: Decimal, size: Decimal, direction: OrderDirection) -> Self {
-        Self {
-            owner,
-            price,
-            size,
-            direction,
-            timestamp: 0,
-            uuid: None,
-        }
-    }
 }
 
 impl From<OpenEvent> for LimitOrder {
@@ -184,7 +171,7 @@ impl Book {
         }
 
         self.price_id_sets.get_mut(&order.price).unwrap().insert(order.id); // add current id
-        self.price_books.get_mut(&order.price).unwrap().open_order(order) // push order into the book
+        self.price_books.get_mut(&order.price).unwrap().open_order(order) // push order into the orderbook
     }
 
     fn cancel_order(&mut self, cancel_event: CancelEvent) -> Option<LimitOrder> {
@@ -256,13 +243,13 @@ impl OrderBook {
             });
         });
 
-        // if an ask is partially filled put the remainder back on the book
+        // if an ask is partially filled put the remainder back on the orderbook
         if let Some(ask_replacement) = ask_replacement {
             events.push(self.ask_book.open_order(ask_replacement));
         }
 
-        // if the opened bid is at all filled remove the order from the book, record the event,
-        // and put the remainder of the order back on the book if it exists
+        // if the opened bid is at all filled remove the order from the orderbook, record the event,
+        // and put the remainder of the order back on the orderbook if it exists
         if let Some(bid_replacement) = bid_replacement {
             OrderBook::remove_order(&mut self.bid_book, &bid.price, &bid.id);
 
@@ -296,12 +283,12 @@ impl OrderBook {
            });
         });
 
-        // if there is a partially filled bid then put it on the book
+        // if there is a partially filled bid then put it on the orderbook
         if let Some(bid_replacement) = bid_replacement {
             events.push(self.bid_book.open_order(bid_replacement));
         }
 
-        // if the opened ask is (partially) filled, then remove it from the book
+        // if the opened ask is (partially) filled, then remove it from the orderbook
         // and replace it with the remainder (if it exists)
         if let Some(ask_replacement) = ask_replacement {
             OrderBook::remove_order(&mut self.ask_book, &ask.price, &ask.id);
@@ -410,7 +397,7 @@ impl OrderBook {
                     }).collect()
             },
             OrderDirection::Ask => {
-                // reverse this iterator since we are walking down the bid book
+                // reverse this iterator since we are walking down the bid orderbook
                 // so we want to get the highest bids first
                 book.price_books.iter().rev().filter(
                     |(p, lvl)| {

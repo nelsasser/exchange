@@ -12,3 +12,6 @@ uuid = { version = "0.8", features = ["serde", "v1"] }
 chrono = "0.4"
 rand = "0.7.3"
 serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0.72"
+google-cloud = {version = "0.2.1", features = ["pubsub"] }
+tokio = { version = "1", features = ["full"] }
