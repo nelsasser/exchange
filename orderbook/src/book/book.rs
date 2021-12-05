@@ -415,7 +415,7 @@ impl OrderBook {
                 book.price_books.iter().rev().filter(
                     |(p, lvl)| {
                         **p >= order.price && lvl.size > Decimal::zero()
-                    }).collect()
+                    }).collect() // IDK an easy way to get around the fact that .rev() messes with the return type enough I have to collect everything to a vec first >:(
             },
         };
 
