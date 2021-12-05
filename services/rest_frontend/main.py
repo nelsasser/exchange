@@ -1,12 +1,18 @@
 import uuid
 from uuid import uuid1
 import json
+import os
+
+pth = 'C:\\Users\\elsan\\Documents\\exchange\\pubsub_keys.json'
+if os.path.exists(pth):
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = pth
 
 from flask import Flask, Response, request
+from google.cloud import pubsub_v1
 
 app = Flask(__name__)
 
-VALID_ASSETS = ['APPL']
+VALID_ASSETS = ['AAPL']
 
 
 def _parse_owner(data, errs):
@@ -140,8 +146,23 @@ def submit_order():
         # return errors
         return Response(json.dumps({'status': 'error', 'errors': errs}), status=400, mimetype='application/json')
     else:
-        # TODO: forward the request to the proper kafka topic based on asset name
-        return Response(json.dumps({'status': 'success', 'errors': errs}), status=200, mimetype='application/json')
+        publisher = pubsub_v1.PublisherClient()
+        topic = f'projects/{os.getenv("GOOGLE_CLOUD_PROJECT") or "project-steelieman"}/topics/{asset}'
+
+        order = {
+            'type': 'open',
+            'owner': owner,
+            'price': price,
+            'size': size,
+            'direction': direction,
+        }
+
+        res = publisher.publish(topic, json.dumps(order).encode()).result()
+
+        if res:
+            return Response(json.dumps({'status': 'success', 'results': res, 'errors': errs}), status=200, mimetype='application/json')
+        else:
+            return Response(json.dumps({'status': 'error', 'errors': ['No results from order']}), status=500, mimetype='application/json')
 
 
 @app.route('/cancel', methods=['POST'])
@@ -157,8 +178,21 @@ def cancel_order():
         # return errors
         return Response(json.dumps({'status': 'error', 'errors': errs}), status=400, mimetype='application/json')
     else:
-        # TODO: forward the request to the proper kafka topic based on asset name
-        return Response(json.dumps({'status': 'success', 'errors': errs}), status=200, mimetype='application/json')
+        publisher = pubsub_v1.PublisherClient()
+        topic = f'projects/{os.getenv("GOOGLE_CLOUD_PROJECT") or "project-steelieman"}/topics/{asset}'
+
+        cancel = {
+            'type': 'cancel',
+            'owner': owner,
+            'order': order,
+        }
+
+        res = publisher.publish(topic, json.dumps(cancel).encode()).result()
+
+        if res:
+            return Response(json.dumps({'status': 'success', 'results': res, 'errors': errs}), status=200, mimetype='application/json')
+        else:
+            return Response(json.dumps({'status': 'error', 'errors': ['No results from cancellation']}), status=500, mimetype='application/json')
 
 
 @app.route('/orders', methods=['POST'])
