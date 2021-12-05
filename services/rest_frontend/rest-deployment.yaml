@@ -20,10 +20,8 @@ spec:
               cpu: 100m
               memory: 100Mi
           env:
-#            - name: REDIS_HOST
-#              value: redis
-#            - name: RABBITMQ_HOST
-#              value: rabbitmq
+            - name: KAFKA_HOST
+              value: kafka
             - name: PYTHONUNBUFFERED
               value: "True"
             - name: PYTHONIOENCODING
