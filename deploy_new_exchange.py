@@ -5,9 +5,25 @@ if os.path.exists(keypath):
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = keypath
 
 import sys
+import json
 import google.oauth2.service_account as service_account
 import googleapiclient.discovery
 from google.cloud import storage
+import mysql.connector
+
+db_config = json.load(open('C:\\Users\\elsan\\Documents\\exchange\\db_config.json'))
+
+def execute_sql(query, mode='select', db=None):
+    if db not in ('price', 'owner'):
+        raise ValueError('db must be one of `price` or `owner`')
+    with mysql.connector.connect(**db_config) as conn:
+        cursor = conn.cursor()
+        cursor.execute(query)
+        if mode == 'select':
+            return conn.fetchall()
+        elif mode == 'commit':
+            conn.commit()
+
 
 if __name__ == '__main__':
     name = sys.argv[1]
@@ -59,4 +75,7 @@ if __name__ == '__main__':
     dataflow_service.projects().templates().launch(projectId='project-steelieman',
                                                    gcsPath=gcs_path,
                                                    body=job_data).execute() # job to automatically pipe output from matches to a log
+
+
+
 

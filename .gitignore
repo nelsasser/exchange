@@ -156,3 +156,4 @@ cython_debug/
 
 /pubsub_keys.json
 /admin_keys.json
+/db_config.json

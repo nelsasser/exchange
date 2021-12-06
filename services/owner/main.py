@@ -10,7 +10,8 @@ if __name__ == '__main__':
     topic = f'projects/{os.getenv("GOOGLE_CLOUD_PROJECT") or "project-steelieman"}/topics/{asset}-Events'
     subsciption = f'projects/{os.getenv("GOOGLE_CLOUD_PROJECT") or "project-steelieman"}/subscriptions/{asset}-Events-sub'
 
-    subsciber_client  = pubsub_v1.SubscriberClient()
+    with pubsub_v1.SubscriberClient() as subscriber:
+
 
 
 
