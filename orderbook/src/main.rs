@@ -31,7 +31,10 @@ macro_rules! assert_some {
 }
 
 #[derive(Serialize, Deserialize)]
-struct Events ( Vec<BookResult> );
+struct Events {
+    asset: String,
+    events: Vec<BookResult>
+}
 
 #[tokio::main]
 async fn main() {
@@ -48,7 +51,7 @@ async fn main() {
 
     println!("Creating orderbook for asset {}", asset);
     io::stdout().flush().unwrap();
-    let mut orderbook = OrderBook::new(asset);
+    let mut orderbook = OrderBook::new();
 
     loop {
         if let Some(mut msg) = subscription.receive().await {
@@ -56,11 +59,16 @@ async fn main() {
 
             // read the message as a book request
             if let Ok(book_request) = serde_json::from_slice::<BookRequest>(msg.data()) {
-                let events = Events{ 0: orderbook.process_request(book_request) };
+                let events = Events {
+                    asset: asset.clone(),
+                    events: orderbook.process_request(book_request),
+                };
 
                 let out_msg = assert_ok!(serde_json::to_vec(&events));
 
                 assert_ok!(topic.publish(out_msg).await);
+
+                println!("Processed!");
             } else {
                 println!("Failed to parse {} into a book request", std::str::from_utf8(msg.data()).unwrap());
             }

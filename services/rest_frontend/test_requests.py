@@ -30,6 +30,18 @@ if __name__ == '__main__':
     print(r.json())
     assert r.status_code == 200
 
+    url = f'http://{srv}/submit'
+    print('TEST:', url)
+    r = requests.post(url, json={
+        'owner': str(uuid.uuid1()),
+        'asset': 'AAPL',
+        'direction': 'Ask',
+        'price': 10.0,
+        'size': 100
+    })
+    print(r.json())
+    assert r.status_code == 200
+
     url = f'http://{srv}/cancel'
     print('TEST:', url)
     r = requests.post(url, json={

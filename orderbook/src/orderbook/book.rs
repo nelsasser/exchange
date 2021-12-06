@@ -120,7 +120,6 @@ struct Book {
 
 #[derive(Debug)]
 pub struct OrderBook {
-    asset: String,
     uuid_ctx: Context,
     bid_book: Book,
     ask_book: Book,
@@ -194,9 +193,8 @@ impl Book {
 }
 
 impl OrderBook {
-    pub fn new(asset: String) -> Self {
+    pub fn new() -> Self {
         OrderBook {
-            asset,
             uuid_ctx: Context::new(rand::random()),
             bid_book: Book::new(),
             ask_book: Book::new(),

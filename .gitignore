@@ -157,3 +157,6 @@ cython_debug/
 /pubsub_keys.json
 /admin_keys.json
 /db_config.json
+/client-cert.pem
+/client-key.pem
+/server-ca.pem
