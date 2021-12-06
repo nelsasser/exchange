@@ -1,0 +1,5 @@
+google-cloud-core
+google-cloud-pubsub
+google-auth
+google-api-core
+google-api-python-client

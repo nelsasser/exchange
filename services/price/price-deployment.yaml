@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: price-exchange
+spec:
+  selector:
+    matchLabels:
+      app: price-exchange
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: price-exchange
+    spec:
+      containers:
+        - name: price-exchange
+          image: niel4265/price-exchange:latest
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          env:
+            - name: PYTHONUNBUFFERED
+              value: "True"
+            - name: PYTHONIOENCODING
+              value: "UTF-8"

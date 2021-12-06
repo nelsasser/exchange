@@ -34,7 +34,7 @@ pub struct OpenEvent {
     pub(crate) size: Decimal,
     pub(crate) direction: OrderDirection,
     pub(crate) timestamp: i64,
-    uuid: Option<Uuid>,
+    pub(crate) uuid: Option<Uuid>,
 }
 
 impl From<OpenEvent> for LimitOrder {
@@ -165,7 +165,7 @@ impl Book {
 
     fn open_order(&mut self, order: LimitOrder) -> BookResult {
         // if no data yet exists at this level
-        if let None = self.mut_price_level(&order.price) {
+        if self.mut_price_level(&order.price).is_none() {
             self.price_books.insert(order.price, BookLevel::new()); // create price level
             self.price_id_sets.insert(order.price, BTreeSet::new()); // create id set for level
         }
@@ -186,10 +186,6 @@ impl Book {
 
         // failed to cancel order, so return None
         None
-    }
-
-    fn get_price_level(&self, price: &Decimal) -> Option<&BookLevel> {
-        self.price_books.get(price)
     }
 
     fn mut_price_level(&mut self, price: &Decimal) -> Option<&mut BookLevel> {
@@ -231,8 +227,7 @@ impl OrderBook {
     fn fill_bid(&mut self, bid: LimitOrder) -> Vec<BookResult> {
         // keep track of filled orders and record the opening of the initial trade
         let mut filled_asks: BTreeMap<Decimal, Vec<Uuid>> = BTreeMap::new();
-        let mut events: Vec<BookResult> = Vec::new();
-        events.push(self.bid_book.open_order(bid));
+        let mut events: Vec<BookResult> = vec![self.bid_book.open_order(bid)];
 
         let (bid_replacement, ask_replacement) = OrderBook::book_walk(&self.uuid_ctx, bid, &mut self.ask_book, &mut events, &mut filled_asks);
 
@@ -271,8 +266,7 @@ impl OrderBook {
     fn fill_ask(&mut self, ask: LimitOrder) ->  Vec<BookResult> {
         // keep track of filled orders and record the opening of the initial trade
         let mut filled_bids: BTreeMap<Decimal, Vec<Uuid>> = BTreeMap::new();
-        let mut events: Vec<BookResult> = Vec::new();
-        events.push(self.ask_book.open_order(ask));
+        let mut events: Vec<BookResult> = vec![self.ask_book.open_order(ask)];
 
         let (ask_replacement, bid_replacement) = OrderBook::book_walk(&self.uuid_ctx, ask, &mut self.bid_book, &mut events, &mut filled_bids);
 
@@ -310,7 +304,7 @@ impl OrderBook {
 
     fn cancel_order(&mut self, cancel_event: CancelEvent) -> Vec<BookResult> {
         let ts = timestamp();
-        if let Some(_) = self.bid_book.cancel_order(cancel_event) {
+        if self.bid_book.cancel_order(cancel_event).is_some() {
             return vec![BookResult::Canceled(CanceledEvent{
                 id: cancel_event.id,
                 owner: cancel_event.owner,
@@ -318,7 +312,7 @@ impl OrderBook {
             })];
         }
 
-        if let Some(_) = self.ask_book.cancel_order(cancel_event) {
+        if self.ask_book.cancel_order(cancel_event).is_some() {
             return vec![BookResult::Canceled(CanceledEvent{
                 id: cancel_event.id,
                 owner: cancel_event.owner,

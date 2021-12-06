@@ -21,7 +21,7 @@ pub enum OrderDirection {
     Ask,
 }
 
-#[derive(Debug, Clone, Copy, Eq, Ord)]
+#[derive(Debug, Clone, Copy, Eq)]
 pub struct LimitOrder {
     pub(crate) id: Uuid,
     pub(crate) parent: Option<Uuid>,
@@ -32,70 +32,66 @@ pub struct LimitOrder {
     pub(crate) timestamp: i64,
 }
 
+impl Ord for LimitOrder {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self.price.cmp(&other.price) {
+            Ordering::Less => { return Ordering::Less }
+            Ordering::Greater => { return Ordering:: Greater }
+            _ => {}
+        }
+
+        match self.timestamp.cmp(&other.timestamp) {
+            Ordering::Less => { return Ordering::Less }
+            Ordering::Greater => { return Ordering:: Greater}
+            _ => {}
+        }
+
+        self.id.cmp(&other.id)
+    }
+
+    fn min(self, other: Self) -> Self {
+        match self.cmp(&other) {
+            Ordering::Less => self,
+            _ => other
+        }
+    }
+
+    fn max(self, other: Self) -> Self {
+        match self.cmp(&other) {
+            Ordering::Greater => self,
+            _ => other
+        }
+    }
+}
+
 impl PartialEq<Self> for LimitOrder {
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id
-    }
-
-    fn ne(&self, other: &Self) -> bool {
-        self.id != other.id
     }
 }
 
 impl PartialOrd<Self> for LimitOrder {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match self.price.partial_cmp(&other.price) {
-            Some(Ordering::Less) => { return Some(Ordering::Less); }
-            Some(Ordering::Greater) => { return Some(Ordering:: Greater); }
-            _ => {}
-        }
-
-        match self.timestamp.partial_cmp(&other.timestamp) {
-            Some(Ordering::Less) => { return Some(Ordering::Less); }
-            Some(Ordering::Greater) => { return Some(Ordering:: Greater);}
-            _ => {}
-        }
-
-        self.id.partial_cmp(&other.id)
+        Some(self.cmp(other))
     }
 
     fn lt(&self, other: &Self) -> bool {
-        if self.price != other.price {
-            return self.price < other.price;
-        }
-
-        self.timestamp < other.timestamp
+        self.cmp(other) == Ordering::Less
     }
 
     fn le(&self, other: &Self) -> bool {
-        if self.price != other.price {
-            return self.price < other.price;
-        }
+        let c = self.cmp(other);
 
-        if self.timestamp != other.timestamp {
-            return self.timestamp < other.timestamp;
-        }
-
-        self.id == other.id
+        c == Ordering::Less || c == Ordering::Equal
     }
 
     fn gt(&self, other: &Self) -> bool {
-        if self.price != other.price {
-            return self.price > other.price;
-        }
-
-        self.timestamp > other.timestamp
+        self.cmp(other) == Ordering::Greater
     }
 
     fn ge(&self, other: &Self) -> bool {
-        if self.price != other.price {
-            return self.price > other.price;
-        }
+        let c = self.cmp(other);
 
-        if self.timestamp != other.timestamp {
-            return self.timestamp > other.timestamp;
-        }
-
-        self.id == other.id
+        c == Ordering::Greater || c == Ordering::Equal
     }
 }

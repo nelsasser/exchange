@@ -62,8 +62,8 @@ def _parse_direction(data, errs):
     if not isinstance(direction, str):
         errs.append('Expected field `direction` for be of type str')
     else:
-        if direction not in ('BID', 'ASK'):
-            errs.append(f"Field `direction` must be one of ['BID', 'ASK']")
+        if direction not in ('Bid', 'Ask'):
+            errs.append(f"Field `direction` must be one of ['Bid', 'Ask']")
 
     return direction
 
@@ -150,11 +150,14 @@ def submit_order():
         topic = f'projects/{os.getenv("GOOGLE_CLOUD_PROJECT") or "project-steelieman"}/topics/{asset}'
 
         order = {
-            'type': 'open',
-            'owner': owner,
-            'price': price,
-            'size': size,
-            'direction': direction,
+            'Open': {
+                'owner': owner,
+                'price': str(price),
+                'size': str(size),
+                'direction': direction,
+                'timestamp': 0,
+                'uuid': None,
+            }
         }
 
         res = publisher.publish(topic, json.dumps(order).encode()).result()
@@ -182,9 +185,11 @@ def cancel_order():
         topic = f'projects/{os.getenv("GOOGLE_CLOUD_PROJECT") or "project-steelieman"}/topics/{asset}'
 
         cancel = {
-            'type': 'cancel',
-            'owner': owner,
-            'order': order,
+            'Cancel': {
+                'owner': owner,
+                'id': order,
+                'timestamp': 0,
+            }
         }
 
         res = publisher.publish(topic, json.dumps(cancel).encode()).result()

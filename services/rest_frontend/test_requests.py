@@ -23,7 +23,7 @@ if __name__ == '__main__':
     r = requests.post(url, json={
         'owner': str(uuid.uuid1()),
         'asset': 'AAPL',
-        'direction': 'BID',
+        'direction': 'Bid',
         'price': 10.0,
         'size': 100
     })

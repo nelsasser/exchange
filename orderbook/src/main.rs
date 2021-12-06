@@ -3,9 +3,10 @@ mod orderbook;
 use std::{env, io::{self, Write}};
 use google_cloud::pubsub;
 use google_cloud::authorize::ApplicationCredentials;
+use serde::{Serialize, Deserialize};
 
 use orderbook::book::OrderBook;
-use crate::orderbook::book::BookRequest;
+use crate::orderbook::book::{BookRequest, BookResult};
 
 macro_rules! assert_ok {
     ($expr:expr) => {
@@ -29,19 +30,20 @@ macro_rules! assert_some {
     };
 }
 
+#[derive(Serialize, Deserialize)]
+struct Events ( Vec<BookResult> );
+
 #[tokio::main]
 async fn main() {
-    let args: Vec<String> = std::env::args().collect();
-    if args.is_empty() {
-        panic!("Expected 1 argument for the orderbook asset");
-    }
+    let asset = env::var("ASSET_KEY").expect("Unable to find ASSET KEY");
 
-    let asset = args[1].clone();
-
-    println!("Setting up Google pub/sub subscription for the asset {}.", asset);
+    println!("Setting up Google pub/sub for the asset {}.", asset);
     io::stdout().flush().unwrap();
-    let mut client = assert_ok!(setup_client().await);
     let sub_name = format!("{}-sub", asset);
+    let events_topic = format!("{}-Events", asset);
+
+    let mut client = assert_ok!(setup_client().await);
+    let mut topic = assert_some!(assert_ok!(client.topic(&events_topic).await));
     let mut subscription = assert_some!(assert_ok!(client.subscription(&sub_name).await));
 
     println!("Creating orderbook for asset {}", asset);
@@ -49,21 +51,19 @@ async fn main() {
     let mut orderbook = OrderBook::new(asset);
 
     loop {
-        match subscription.receive().await {
-            Some(mut msg) => {
+        if let Some(mut msg) = subscription.receive().await {
+            assert_ok!(msg.ack().await);
 
-                msg.ack().await;
+            // read the message as a book request
+            if let Ok(book_request) = serde_json::from_slice::<BookRequest>(msg.data()) {
+                let events = Events{ 0: orderbook.process_request(book_request) };
 
-                // read the message as a book request
-                if let Ok(book_request) = serde_json::from_slice::<BookRequest>(msg.data()) {
-                    println!("Received book request {:?}", book_request);
-                    let events = orderbook.process_request(book_request);
-                    println!("Events {:?}", events);
-                } else {
-                    println!("Failed to parse {} into a book request", std::str::from_utf8(msg.data()).unwrap());
-                }
-            },
-            _ => (),
+                let out_msg = assert_ok!(serde_json::to_vec(&events));
+
+                assert_ok!(topic.publish(out_msg).await);
+            } else {
+                println!("Failed to parse {} into a book request", std::str::from_utf8(msg.data()).unwrap());
+            }
         }
     }
 
