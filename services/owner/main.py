@@ -12,7 +12,7 @@ import json
 import uuid
 
 
-db_config = json.load(open('./etc/secret-volume/db_config.json'))
+db_config = json.load(open('~/etc/secret-volume/db_config.json'))
 
 
 def execute_sql(query, params=None, mode='select', db=None):
