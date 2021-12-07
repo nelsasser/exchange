@@ -3,3 +3,4 @@ google-cloud-pubsub
 google-auth
 google-api-core
 google-api-python-client
+mysql-connector-python
