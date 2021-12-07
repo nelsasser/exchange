@@ -24,3 +24,10 @@ spec:
               value: "True"
             - name: PYTHONIOENCODING
               value: "UTF-8"
+          volumeMounts:
+            - name: secret-volume
+              mountPath: /etc/secret-volume
+      volumes:
+        - name: secret-volume
+          secret:
+            secretName: db_secret

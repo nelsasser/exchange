@@ -7,13 +7,12 @@ pth = 'C:\\Users\\elsan\\Documents\\exchange\\pubsub_keys.json'
 if os.path.exists(pth):
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = pth
 
+VALID_ASSETS = json.loads(os.environ['VALID_ASSETS'])
+
 from flask import Flask, Response, request
 from google.cloud import pubsub_v1
 
 app = Flask(__name__)
-
-VALID_ASSETS = ['AAPL']
-
 
 def _parse_owner(data, errs):
     owner = None

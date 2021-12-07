@@ -160,3 +160,4 @@ cython_debug/
 /client-cert.pem
 /client-key.pem
 /server-ca.pem
+/services/secrets/local_db_secrets.yaml

@@ -12,14 +12,14 @@ from google.cloud import storage
 import mysql.connector
 from time import sleep
 
-db_config = json.load(open('C:\\Users\\elsan\\Documents\\exchange\\db_config.json'))
+db_config = json.load(open('./db_config.json'))
 
-def execute_sql(query, mode='select', db=None):
+def execute_sql(query, params=None, mode='select', db=None):
     if db not in ('price', 'owner'):
         raise ValueError('db must be one of `price` or `owner`')
     with mysql.connector.connect(**db_config, database=db) as conn:
         cursor = conn.cursor()
-        cursor.execute(query)
+        cursor.execute(query, params)
         if mode == 'select':
             return conn.fetchall()
         elif mode == 'commit':
@@ -231,24 +231,23 @@ if __name__ == '__main__':
 
     credentials = service_account.Credentials.from_service_account_file(filename=keypath)
 
-    # setup input and output topics
-    # print('Setting up topics')
-    # book_topic, events_topic = setup_topics(asset, credentials)
-    # print('Set up topics:', ', '.join([book_topic, events_topic]))
-    #
-    # print('Setting up bucket')
-    # bucket_name = setup_bucket(asset)
-    # print('Setup bucket:', bucket_name)
-    #
-    # print('Setting up event routes')
-    # events_bucket_route(asset, events_topic, bucket_name, credentials)
-    # events_price_route(asset, events_topic, bucket_name, credentials)
-    # events_account_route(asset, events_topic, bucket_name, credentials)
-    # print('Done setting up event routes')
-    #
-    # print('Setting up orderbook vm.')
-    # setup_orderbook(asset, credentials)
-    # print('Done setting up orderbook vm.')
+    print('Setting up topics')
+    book_topic, events_topic = setup_topics(asset, credentials)
+    print('Set up topics:', ', '.join([book_topic, events_topic]))
+
+    print('Setting up bucket')
+    bucket_name = setup_bucket(asset)
+    print('Setup bucket:', bucket_name)
+
+    print('Setting up event routes')
+    events_bucket_route(asset, events_topic, bucket_name, credentials)
+    events_price_route(asset, events_topic, bucket_name, credentials)
+    events_account_route(asset, events_topic, bucket_name, credentials)
+    print('Done setting up event routes')
+
+    print('Setting up orderbook vm.')
+    setup_orderbook(asset, credentials)
+    print('Done setting up orderbook vm.')
 
     print('Creating new asset price table')
     create_price_table(asset)
