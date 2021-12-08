@@ -30,4 +30,4 @@ spec:
       volumes:
         - name: secret-volume
           secret:
-            secretName: db-secret
+            secretName: admin-secret

@@ -3,7 +3,7 @@ from uuid import uuid1
 import json
 import os
 
-pth = 'C:\\Users\\elsan\\Documents\\exchange\\pubsub_keys.json'
+pth = '/etc/secret-volume/pubsub_keys.json'
 if os.path.exists(pth):
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = pth
 

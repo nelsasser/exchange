@@ -28,3 +28,10 @@ spec:
               value: '["AAPL", "MSFT", "FB"]'
           ports:
             - containerPort: 5000
+          volumeMounts:
+            - name: secret-volume
+              mountPath: /etc/secret-volume
+      volumes:
+        - name: secret-volume
+          secret:
+            secretName: admin-secret
