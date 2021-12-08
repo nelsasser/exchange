@@ -1,4 +1,4 @@
-kubectl apply -f ./services/secrets/db-secrets.yaml
+kubectl apply -f ./services/secrets/admin-secrets.yaml
 
 kubectl apply -f ./services/owner/owner-deployment.yaml
 
