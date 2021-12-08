@@ -26,3 +26,5 @@ spec:
               value: "UTF-8"
             - name: VALID_ASSETS
               value: '["AAPL", "MSFT", "FB"]'
+          ports:
+            - containerPort: 5000
