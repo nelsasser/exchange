@@ -3,6 +3,8 @@ import os
 pth = '/etc/secret-volume/pubsub_keys.json'
 if os.path.exists(pth):
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = pth
+else:
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:\\Users\\elsan\\Documents\\exchange\\pubsub_keys.json'
 
 from google.cloud import pubsub_v1
 import base64
@@ -11,7 +13,10 @@ from time import sleep
 import json
 import uuid
 
-db_config = json.load(open('/etc/secret-volume/db_config.json'))
+try:
+    db_config = json.load(open('/etc/secret-volume/db_config.json'))
+except:
+    db_config = json.load(open('C:\\Users\\elsan\\Documents\\exchange\\db_config.json'))
 
 
 def execute_sql(query, params=None, mode='select', db=None):
@@ -44,10 +49,9 @@ def callback(message):
         owner = uuid.UUID(event['owner']).int
         order = uuid.UUID(event['id']).int
 
-
-        price = float(event['price'])
-        size = int(event['size'])
-        direction = event['direction']
+        price = float(event['price']) if 'price' in event else 1.0
+        size = int(event['size']) if 'size' in event else 1
+        direction = event.get('direction', 'TEMP') # can be None if it is a filled or canceled eveny
         parent = uuid.UUID(event['parent']) if event['parent'] else None
 
         query = """
@@ -56,7 +60,10 @@ def callback(message):
             VALUES
                 (%s, %s, %s, %s, %s, %s, %s, %s, DEFAULT)
             ON DUPLICATE KEY UPDATE
-                status = VALUES(status),
+                price = price * VALUES(price),
+                size = size * VALUES(size),
+                direction = IF(direction = 'TEMP', VALUES(direction), direction),
+                status = IF(status = 'Opened', VALUES(status), status), 
                 timestamp = NOW();
         """
 

@@ -58,7 +58,6 @@ def callback(message):
         VALUES
             (%s, %s, %s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE
-            open = open,
             low = min(low, VALUES(low)),
             high = max(high, VALUES(high)),
             close = VALUES(close),
