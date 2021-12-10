@@ -2,3 +2,4 @@ requests
 Flask
 google-cloud-core
 google-cloud-pubsub
+mysql-connector-python
