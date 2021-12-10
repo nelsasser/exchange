@@ -38,7 +38,7 @@ struct Events {
 
 #[tokio::main]
 async fn main() {
-    let asset = env::var("ASSET_KEY").expect("Unable to find ASSET KEY");
+    let asset = env::args().nth(1).expect("error: expected asset name as argument");
 
     println!("Setting up Google pub/sub for the asset {}.", asset);
     io::stdout().flush().unwrap();

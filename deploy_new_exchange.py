@@ -158,7 +158,7 @@ def setup_orderbook(name, creds):
             "items": [
                 {
                     "key": "startup-script",
-                    "value": f"#! /bin/bash\nexport ASSET_KEY={name}\ncd /srv\n./orderbook"
+                    "value": f"#! /bin/bash\n./srv/orderbook {name}"
                 }
             ]
         },
