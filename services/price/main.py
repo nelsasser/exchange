@@ -58,8 +58,8 @@ def callback(message):
         VALUES
             (%s, %s, %s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE
-            low = min(low, VALUES(low)),
-            high = max(high, VALUES(high)),
+            low = LEAST(low, VALUES(low)),
+            high = GREATEST(high, VALUES(high)),
             close = VALUES(close),
             volume = volume + VALUES(volume);
         """.format(table.lower())
