@@ -65,9 +65,15 @@ def callback(message):
 
 
 if __name__ == '__main__':
-    subscription = f'projects/project-steelieman"/topics/price-updates-sub'
-    with pubsub_v1.SubscriberClient() as subscriber:
-        subscriber.subscribe(subscription, callback)
+    subscription = f'projects/project-steelieman/topics/price-updates-sub'
 
-        while True:
-            sleep(60)
+    print('Listening on', subscription)
+
+    with pubsub_v1.SubscriberClient() as subscriber:
+        future = subscriber.subscribe(subscription, callback)
+        
+        future.result()
+
+
+    print('AAAAAHHH!')
+
