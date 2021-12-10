@@ -79,6 +79,8 @@ impl From<LimitOrder> for OpenedEvent {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FilledEvent {
     pub(crate) id: Uuid,
+    pub(crate) owner: Uuid,
+    pub(crate) parent: Option<Uuid>,
     pub(crate) price: Decimal,
     pub(crate) size: Decimal,
     pub(crate) timestamp: i64,
@@ -95,6 +97,7 @@ pub struct CancelEvent {
 pub struct CanceledEvent {
     pub(crate) id: Uuid,
     pub(crate) owner: Uuid,
+    pub(crate) parent: Option<Uuid>,
     pub(crate) timestamp: i64,
 }
 
@@ -248,6 +251,8 @@ impl OrderBook {
 
             events.push(BookResult::Filled(FilledEvent{
                 id: bid.id,
+                owner: bid.owner,
+                parent: bid.parent,
                 price: bid.price,
                 size: bid.size - bid_replacement.size,
                 timestamp: bid.timestamp,
@@ -287,6 +292,8 @@ impl OrderBook {
 
             events.push(BookResult::Filled(FilledEvent{
                 id: ask.id,
+                owner: ask.owner,
+                parent: ask.parent,
                 price: ask.price,
                 size: ask.size - ask_replacement.size,
                 timestamp: ask.timestamp,
@@ -302,18 +309,20 @@ impl OrderBook {
 
     fn cancel_order(&mut self, cancel_event: CancelEvent) -> Vec<BookResult> {
         let ts = timestamp();
-        if self.bid_book.cancel_order(cancel_event).is_some() {
+        if let Some(canceled_order) = self.bid_book.cancel_order(cancel_event) {
             return vec![BookResult::Canceled(CanceledEvent{
-                id: cancel_event.id,
-                owner: cancel_event.owner,
+                id: canceled_order.id,
+                owner: canceled_order.owner,
+                parent: canceled_order.parent,
                 timestamp: ts,
             })];
         }
 
-        if self.ask_book.cancel_order(cancel_event).is_some() {
+        if let Some(canceled_order) = self.ask_book.cancel_order(cancel_event) {
             return vec![BookResult::Canceled(CanceledEvent{
-                id: cancel_event.id,
-                owner: cancel_event.owner,
+                id: canceled_order.id,
+                owner: canceled_order.owner,
+                parent: canceled_order.parent,
                 timestamp: ts,
             })];
         }
@@ -333,6 +342,8 @@ impl OrderBook {
             // full fill of the order_match
             all_events.push(BookResult::Filled(FilledEvent{
                 id: order_match.id,
+                owner: order_match.owner,
+                parent: order_match.parent,
                 price: order_match.price,
                 size: order_match.size,
                 timestamp: ts,
@@ -349,6 +360,8 @@ impl OrderBook {
             all_events.push(BookResult::Filled(FilledEvent{
                 id: order_match.id,
                 price: order_match.price,
+                owner: order_match.owner,
+                parent: order_match.parent,
                 size: *remainder,
                 timestamp: ts,
             }));

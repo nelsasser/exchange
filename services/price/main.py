@@ -32,10 +32,16 @@ def dict_update(d, k, v):
 
 
 def callback(message):
-    data = json.loads(base64.b64decode(message.data).decode('utf-8'))
+    data = json.loads(bytes.decode(message.data))
     print('Data:', data)
 
     table = data['asset']
+
+    if 'events' not in data:
+        print(f'WARNING: Message does not contain any events ---- {data}')
+        message.ack()
+        return
+
     events = data['events']
 
     # must be 3 events for a fill to have occured (1 open, 2 fills (bid / ask))
@@ -65,15 +71,8 @@ def callback(message):
 
 
 if __name__ == '__main__':
-    subscription = f'projects/project-steelieman/topics/price-updates-sub'
-
-    print('Listening on', subscription)
-
     with pubsub_v1.SubscriberClient() as subscriber:
-        future = subscriber.subscribe(subscription, callback)
+        sub_path = subscriber.subscription_path('project-steelieman', 'price-updates-sub')
+        future = subscriber.subscribe(sub_path, callback)
         
         future.result()
-
-
-    print('AAAAAHHH!')
-

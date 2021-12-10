@@ -6,7 +6,14 @@ macro_rules! bid {
     ($owner:expr, [$(($price:expr, $size:expr)),+]) => {
         vec![
             $(
-                OpenEvent::new($owner, $price.into(), $size.into(), OrderDirection::Bid)
+                OpenEvent {
+                    owner: $owner,
+                    price: $price.into(),
+                    size: $size.into(),
+                    direction: OrderDirection::Bid,
+                    timestamp: 0,
+                    uuid: None
+                }
             ),+
         ]
     };
@@ -17,7 +24,14 @@ macro_rules! ask {
     ($owner:expr, [$(($price:expr, $size:expr)),+]) => {
         vec![
             $(
-                OpenEvent::new($owner, $price.into(), $size.into(), OrderDirection::Ask)
+                OpenEvent {
+                    owner: $owner,
+                    price: $price.into(),
+                    size: $size.into(),
+                    direction: OrderDirection::Ask,
+                    timestamp: 0,
+                    uuid: None
+                }
             ),+
         ]
     };
@@ -37,7 +51,7 @@ mod tests {
 
     #[test]
     fn open_order() {
-        let mut orderbook = OrderBook::new("test".into());
+        let mut orderbook = OrderBook::new();
 
         let trader_id = trader();
 
@@ -59,7 +73,7 @@ mod tests {
 
     #[test]
     fn cancel_open_order() {
-        let mut orderbook = OrderBook::new("test".into());
+        let mut orderbook = OrderBook::new();
 
         let trader_id = trader();
 
@@ -90,7 +104,7 @@ mod tests {
 
     #[test]
     fn cancel_na_order() {
-        let mut orderbook = OrderBook::new("test".into());
+        let mut orderbook = OrderBook::new();
 
         let id = trader();
 
@@ -116,7 +130,7 @@ mod tests {
 
     #[test]
     fn double_cancel() {
-        let mut orderbook = OrderBook::new("test".into());
+        let mut orderbook = OrderBook::new();
 
         let trader_id = trader();
 
@@ -167,7 +181,7 @@ mod tests {
 
     #[test]
     fn fill_single() {
-        let mut orderbook = OrderBook::new("test".into());
+        let mut orderbook = OrderBook::new();
 
         let trader_a = trader();
         let trader_b = trader();
@@ -216,7 +230,7 @@ mod tests {
 
     #[test]
     fn fill_partial_single() {
-        let mut orderbook = OrderBook::new("test".into());
+        let mut orderbook = OrderBook::new();
 
         let trader_a = trader();
         let trader_b = trader();
@@ -277,7 +291,7 @@ mod tests {
 
     #[test]
     fn fill_many() {
-        let mut orderbook = OrderBook::new("test".into());
+        let mut orderbook = OrderBook::new();
 
         let trader_a = trader();
         let trader_b = trader();
@@ -338,7 +352,7 @@ mod tests {
 
     #[test]
     fn fill_partial_many() {
-        let mut orderbook = OrderBook::new("test".into());
+        let mut orderbook = OrderBook::new();
 
         let trader_a = trader();
         let trader_b = trader();
@@ -410,7 +424,7 @@ mod tests {
 
     #[test]
     fn fill_cross_levels_ask() {
-        let mut orderbook = OrderBook::new("test".into());
+        let mut orderbook = OrderBook::new();
 
         let trader_a = trader();
         let trader_b = trader();
@@ -483,7 +497,7 @@ mod tests {
 
     #[test]
     fn fill_cross_levels_bid() {
-        let mut orderbook = OrderBook::new("test".into());
+        let mut orderbook = OrderBook::new();
 
         let trader_a = trader();
         let trader_b = trader();

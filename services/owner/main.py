@@ -11,7 +11,6 @@ from time import sleep
 import json
 import uuid
 
-
 db_config = json.load(open('/etc/secret-volume/db_config.json'))
 
 
@@ -28,10 +27,15 @@ def execute_sql(query, params=None, mode='select', db=None):
 
 
 def callback(message):
-    data = json.loads(base64.b64decode(message.data).decode('utf-8'))
+    data = json.loads(bytes.decode(message.data))
     print('Data:', data)
 
     asset = data['asset']
+
+    if 'events' not in data:
+        print(f'WARNING: Message does not contain any events ---- {data}')
+        message.ack()
+        return
 
     # filter out bounce events
     for event in filter(lambda x: 'Bounce' not in x, data['events']):
@@ -40,48 +44,30 @@ def callback(message):
         owner = uuid.UUID(event['owner']).int
         order = uuid.UUID(event['id']).int
 
-        if status == 'Opened':
-            # insert new row for the order
-            price = float(event['price'])
-            size = int(event['size'])
-            direction = event['direction']
-            parent = uuid.UUID(event['parent']) if event['parent'] else None
 
-            query = """
-                INSERT INTO accounts
-                    (owner_id, order_id, parent_id, asset, price, size, direction, status, timestamp)
-                VALUES
-                    (%s, %s, %s, %s, %s, %s, %s, %s, DEFAULT)
-            """
+        price = float(event['price'])
+        size = int(event['size'])
+        direction = event['direction']
+        parent = uuid.UUID(event['parent']) if event['parent'] else None
 
-            execute_sql(query, params=(owner, order, parent, asset, price, size, direction, status), mode='commit', db='owner')
-        else:
-            # update the row of the order with the new status (canceled / filled)
-            query = """
-                UPDATE 
-                    accounts
-                SET
-                    status = %s,
-                    timestamp = NOW()
-                WHERE 
-                    owner_id = %s AND 
-                    order_id = %s
-            """
+        query = """
+            INSERT INTO accounts
+                (owner_id, order_id, parent_id, asset, price, size, direction, status, timestamp)
+            VALUES
+                (%s, %s, %s, %s, %s, %s, %s, %s, DEFAULT)
+            ON DUPLICATE KEY UPDATE
+                status = VALUES(status),
+                timestamp = NOW();
+        """
 
-            execute_sql(query, params=(status, owner, order), mode='commit', db='owner')
+        execute_sql(query, params=(owner, order, parent, asset, price, size, direction, status), mode='commit', db='owner')
 
     message.ack()
 
 
 if __name__ == '__main__':
-    subscription = f'projects/project-steelieman/topics/account-updates-sub'
-
-    print('Listening on', subscription)
-
     with pubsub_v1.SubscriberClient() as subscriber:
-        future = subscriber.subscribe(subscription, callback)
+        sub_path = subscriber.subscription_path('project-steelieman', 'account-updates-sub')
+        future = subscriber.subscribe(sub_path, callback)
 
         future.result()
-
-
-    print('AAAAAHHH!')
