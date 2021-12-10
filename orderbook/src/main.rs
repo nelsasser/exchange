@@ -78,7 +78,7 @@ async fn main() {
 }
 
 fn load_creds() -> ApplicationCredentials {
-    let pth = std::path::Path::new("C:\\Users\\elsan\\Documents\\exchange\\pubsub_keys.json");
+    let pth = std::path::Path::new("./pubsub_keys.json");
     if pth.exists() {
         let data = assert_ok!(std::fs::read_to_string(pth));
         std::env::set_var("RUST_GOOGLE_APPLICATION_CREDENTIALS", data);

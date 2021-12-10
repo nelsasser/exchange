@@ -136,12 +136,13 @@ def setup_orderbook(name, creds):
             {
                 "autoDelete": True,
                 "boot": True,
-                "deviceName": f"{name.lower()}-orderbook",
+                "deviceName": "aapl-orderbook",
+                "diskEncryptionKey": {},
                 "initializeParams": {
                     "diskSizeGb": "10",
                     "diskType": "projects/project-steelieman/zones/us-central1-a/diskTypes/pd-balanced",
                     "labels": {},
-                    "sourceImage": "projects/cos-cloud/global/images/cos-stable-93-16623-39-28"
+                    "sourceImage": "projects/project-steelieman/global/images/orderbook"
                 },
                 "mode": "READ_WRITE",
                 "type": "PERSISTENT"
@@ -151,15 +152,13 @@ def setup_orderbook(name, creds):
             "enableDisplay": False
         },
         "guestAccelerators": [],
-        "labels": {
-            "container-vm": "cos-stable-93-16623-39-28"
-        },
-        "machineType": "projects/project-steelieman/zones/us-central1-c/machineTypes/e2-medium",
+        "labels": {},
+        "machineType": "projects/project-steelieman/zones/us-central1-a/machineTypes/e2-medium",
         "metadata": {
             "items": [
                 {
-                    "key": "gce-container-declaration",
-                    "value": f"spec:\n  containers:\n  - name: {name.lower()}-orderbook\n    image: https://hub.docker.com/repository/docker/niel4265/orderbook\n    env:\n    - name: ASSET_KEY\n      value: {name}\n    stdin: false\n    tty: false\n  restartPolicy: Always\n# This container declaration format is not public API and may change without notice. Please\n# use gcloud command-line tool or Google Cloud Console to run Containers on Google Compute Engine."
+                    "key": "startup-script",
+                    "value": f"#! /bin/bash\nexport ASSET_KEY={name}\ncd /srv\n./orderbook"
                 }
             ]
         },
@@ -202,7 +201,7 @@ def setup_orderbook(name, creds):
                 "https-server"
             ]
         },
-        "zone": "projects/project-steelieman/zones/us-central1-c"
+        "zone": "projects/project-steelieman/zones/us-central1-a"
     }
 
     vm_service.instances().insert(project='project-steelieman', zone='us-central1-c', body=data).execute()
