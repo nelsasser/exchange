@@ -11,8 +11,24 @@ VALID_ASSETS = json.loads(os.environ['VALID_ASSETS'])
 
 from flask import Flask, Response, request
 from google.cloud import pubsub_v1
+import mysql.connector
 
 app = Flask(__name__)
+
+db_config = json.load(open('/etc/secret-volume/db_config.json'))
+
+
+def execute_sql(query, params=None, mode='select', db=None):
+    if db not in ('price', 'owner'):
+        raise ValueError('db must be one of `price` or `owner`')
+    with mysql.connector.connect(**db_config, database=db) as conn:
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        if mode == 'select':
+            return conn.fetchall()
+        elif mode == 'commit':
+            conn.commit()
+
 
 def _parse_owner(data, errs):
     owner = None
@@ -120,6 +136,23 @@ def _parse_order(data, errs):
     return order
 
 
+def _parse_timestamp(data, errs, name=None):
+    ts = None
+
+    if name is None or not isinstance(name, str):
+        raise ValueError('name must be a string')
+
+    if name not in data:
+        errs.append(f'Expected field `{name}` not found.')
+    else:
+        try:
+            ts = int(data[name])
+        except:
+            errs.append(f'Could not convert timestamp {name} to int')
+
+    return ts
+
+
 @app.route('/')
 def hello_world():
     return 'Hello world!'
@@ -207,12 +240,60 @@ def orders():
     owner = _parse_owner(data, errs)
     asset = _parse_asset(data, errs)
 
+    query = """
+        SELECT
+            *
+        FROM
+            accounts
+        WHERE
+            owner = %s AND asset = %s; 
+    """
+
+    res = None
+    try:
+        res = execute_sql(query, params=(owner.int, asset), mode='select', db='owner')
+    except Exception as e:
+        errs.append(str(e))
+
     if len(errs):
         # return errors
-        return Response(json.dumps({'status': 'error', 'errors': errs}), status=400, mimetype='application/json')
+        return Response(json.dumps({'status': 'error', 'errors': errs, 'orders': res}), status=400, mimetype='application/json')
     else:
-        # TODO: request from user management service the orders the user has submitted and return them
-        return Response(json.dumps({'status': 'success', 'errors': errs}), status=200, mimetype='application/json')
+        return Response(json.dumps({'status': 'success', 'errors': errs, 'orders': res}), status=200, mimetype='application/json')
+
+
+@app.route('/price', methods=['POST'])
+def price():
+    res = None
+    errs = []
+    data = request.get_json()
+
+    asset = _parse_asset(data, errs)
+    start_time = _parse_timestamp(data, errs, name='start_time')
+    end_time = _parse_timestamp(data, errs, name='end_time')
+
+    if start_time > end_time:
+        errs.append('start_time must be leq end_time.')
+    else:
+        query = """
+            SELECT
+                *
+            FROM
+                {}_price
+            WHERE
+                market_time >= %s AND market_times <= %s;
+        """.format(asset)
+
+        try:
+            res = execute_sql(query, params=(start_time, end_time), mode='select', db='price')
+        except Exception as e:
+            errs.append(str(e))
+
+    if len(errs):
+        # return errors
+        return Response(json.dumps({'status': 'error', 'errors': errs, 'orders': res}), status=400, mimetype='application/json')
+    else:
+        return Response(json.dumps({'status': 'success', 'errors': errs, 'orders': res}), status=200, mimetype='application/json')
 
 
 # start flask app
