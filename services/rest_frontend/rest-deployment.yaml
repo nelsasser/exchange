@@ -27,7 +27,7 @@ spec:
             - name: VALID_ASSETS
               value: '["AAPL", "MSFT", "FB"]'
           ports:
-            - containerPort: 5000
+            - containerPort: 8080
           volumeMounts:
             - name: secret-volume
               mountPath: /etc/secret-volume
