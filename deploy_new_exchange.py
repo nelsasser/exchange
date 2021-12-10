@@ -140,7 +140,7 @@ def setup_orderbook(name, creds):
                 "diskEncryptionKey": {},
                 "initializeParams": {
                     "diskSizeGb": "10",
-                    "diskType": "projects/project-steelieman/zones/us-central1-a/diskTypes/pd-balanced",
+                    "diskType": "projects/project-steelieman/zones/us-central1-c/diskTypes/pd-balanced",
                     "labels": {},
                     "sourceImage": "projects/project-steelieman/global/images/orderbook"
                 },
@@ -153,7 +153,7 @@ def setup_orderbook(name, creds):
         },
         "guestAccelerators": [],
         "labels": {},
-        "machineType": "projects/project-steelieman/zones/us-central1-a/machineTypes/e2-medium",
+        "machineType": "projects/project-steelieman/zones/us-central1-c/machineTypes/e2-medium",
         "metadata": {
             "items": [
                 {
@@ -201,7 +201,7 @@ def setup_orderbook(name, creds):
                 "https-server"
             ]
         },
-        "zone": "projects/project-steelieman/zones/us-central1-a"
+        "zone": "projects/project-steelieman/zones/us-central1-c"
     }
 
     vm_service.instances().insert(project='project-steelieman', zone='us-central1-c', body=data).execute()
