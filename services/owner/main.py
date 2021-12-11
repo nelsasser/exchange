@@ -26,7 +26,7 @@ def execute_sql(query, params=None, mode='select', db=None):
         cursor = conn.cursor()
         cursor.execute(query, params)
         if mode == 'select':
-            return conn.fetchall()
+            return cursor.fetchall()
         elif mode == 'commit':
             conn.commit()
 
