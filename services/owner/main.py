@@ -52,7 +52,7 @@ def callback(message):
         price = float(event['price']) if 'price' in event else 1.0
         size = int(event['size']) if 'size' in event else 1
         direction = event.get('direction', 'TEMP') # can be None if it is a filled or canceled eveny
-        parent = uuid.UUID(event['parent']) if event['parent'] else None
+        parent = uuid.UUID(event['parent']).int if event['parent'] else None
 
         query = """
             INSERT INTO accounts
