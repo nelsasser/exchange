@@ -15,26 +15,23 @@ def run_trader(trader):
 
     while True:
         if random.random() < 0.75 or not open_trades:
-            # submit 5 trades
-            for i in range(5):
-                direction = 'Bid' if random.random() < 0.5 else 'Ask'
-                price = round(max(0.0, random.normalvariate(trader["mean"], trader["var"]), 2))
-                size = int((random.uniform(50, 100) // 10) * 10)
+            # submit trade
+            direction = 'Bid' if random.random() < 0.5 else 'Ask'
+            price = round(max(0.0, random.normalvariate(trader["mean"], trader["var"]), 2))
+            size = int((random.uniform(50, 100) // 10) * 10)
 
-                print(f'Trader #{trader["num"]} submitting {size} @ {price}')
+            print(f'Trader #{trader["num"]} submitting {direction} {size} @ {price}')
 
-                res = requests.post(f'http://{trader["endpoint"]}/submit', json={
-                    'owner': owner,
-                    'asset': trader["asset"],
-                    'direction': direction,
-                    'price': price,
-                    'size': size
-                })
+            res = requests.post(f'http://{trader["endpoint"]}/submit', json={
+                'owner': owner,
+                'asset': trader["asset"],
+                'direction': direction,
+                'price': price,
+                'size': size
+            })
 
-                if res.status_code != 200:
-                    print('SUBMIT ERROR')
-                    print(res.json()['errs'])
-                    print()
+            if res.status_code != 200:
+                print(f'Trader #{trader["num"]} SUBMIT ERROR\n{res.json()["errors"]}\n')
 
             open_trades = True
         else:
@@ -50,11 +47,9 @@ def run_trader(trader):
             orders = requests.post(f'http://{trader["endpoint"]}/orders', json=data).json()
 
             if 'orders' not in orders or orders['orders'] is None:
-                if len(orders['errs']):
-                    print('ERROR')
-                    print(orders['errs'])
-                    print('')
-                return
+                if len(orders['errors']):
+                    print(f'Trader #{trader["num"]} ORDERS ERROR\n{orders["errors"]}\n')
+                continue
 
             open_order_ids = map(lambda x: str(uuid.UUID(x[1])), filter(lambda x: x[5] == 'Opened', orders['orders']))
 
@@ -68,9 +63,8 @@ def run_trader(trader):
                 res = requests.post(f'http://{trader["endpoint"]}/cancel', json=data)
 
                 if res.status_code != 200:
-                    print('ERROR')
-                    print(res.json()['errs'])
-                    print()
+                    print(f'Trader #{trader["num"]} CANCEL ERROR\n{orders["errors"]}\n')
+
             open_trades = False
 
         time.sleep(trader["loop_delay"])
@@ -81,9 +75,9 @@ if __name__ == '__main__':
     name = 'AAPL'
     mean = 100
     var = 5
-    loop_delay = 0.1
+    loop_delay = 1
 
-    num_traders = 10
+    num_traders = 3
 
     traders = [{
         'num': i,

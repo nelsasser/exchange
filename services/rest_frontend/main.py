@@ -251,7 +251,7 @@ def orders():
 
     res = None
     try:
-        res = execute_sql(query, params=(owner.int, asset), mode='select', db='owner')
+        res = execute_sql(query, params=(uuid.UUID(owner).int, asset), mode='select', db='owner')
     except Exception as e:
         errs.append(str(e))
 
