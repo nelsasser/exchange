@@ -2,6 +2,7 @@ import uuid
 import requests
 import random
 import time
+import math
 
 from multiprocessing import Pool
 
@@ -17,7 +18,8 @@ def run_trader(trader):
         if random.random() < 0.75 or not open_trades:
             # submit trade
             direction = 'Bid' if random.random() < 0.5 else 'Ask'
-            price = round(max(0.0, random.normalvariate(trader[f"{direction} mean"], trader["var"])), 2)
+            s = math.sin(((int(time.time() * 1e6) % 60) / 60) * 2 * math.pi) * 10
+            price = round(max(0.0, random.normalvariate(trader[f"{direction} mean"] + s, trader["var"])), 2)
             size = int((random.uniform(50, 100) // 10) * 10)
 
             print(f'Trader #{trader["num"]} submitting {direction} {size} @ {price}', flush=True)

@@ -49,7 +49,7 @@ def callback(message):
         fill_events = list(map(lambda x: x['Filled'], filter(lambda x: 'Filled' in x, events)))
 
         vol = int(fill_events[-1]['size'])
-        ts = int((int(fill_events[0]['timestamp']) // (1000 * 60)) * 60 * 1000) # aggregate by the minute
+        ts = int(fill_events[0]['timestamp'])
         price = sum(map(lambda x: float(x['price']) * float(x['size']), fill_events)) / (2 * float(vol))
 
         query = """
