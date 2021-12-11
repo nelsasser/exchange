@@ -273,7 +273,7 @@ def orders():
         # return errors
         return Response(json.dumps({'status': 'error', 'errors': errs, 'orders': res}), status=400, mimetype='application/json')
     else:
-        return Response(json.dumps({'status': 'success', 'errors': errs, 'orders': res}), status=200, mimetype='application/json')
+        return Response(json.dumps({'status': 'success', 'errors': errs, 'orders': list(map(_orders_mapper, res))}), status=200, mimetype='application/json')
 
 
 @app.route('/price', methods=['POST'])
