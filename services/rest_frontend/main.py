@@ -153,6 +153,20 @@ def _parse_timestamp(data, errs, name=None):
     return ts
 
 
+def _orders_mapper(order):
+    return (
+        str(uuid.UUID(str(order[0]))),
+        str(uuid.UUID(str(order[1]))),
+        str(uuid.UUID(str(order[2]))) if order[2] else None,
+        float(order[3]),
+        int(order[4]),
+        str(order[5]),
+        int(order[6]),
+        str(order[7]),
+        str(order[8]),
+    )
+
+
 @app.route('/')
 def hello_world():
     return 'Hello world!'
@@ -286,6 +300,7 @@ def price():
 
         try:
             res = execute_sql(query, params=(start_time, end_time), mode='select', db='price')
+            res = list(map(lambda x: (str(uuid.UUID(str(x[0]))), str(uuid.UUID(str(x[1]))))))
         except Exception as e:
             errs.append(str(e))
 

@@ -11,7 +11,7 @@ def run_trader(trader):
 
     owner = requests.get(f'http://{trader["endpoint"]}/uuid').json()['uuid']
 
-    print(f'Trader #{trader["num"]} == {owner}')
+    print(f'Trader #{trader["num"]} == {owner}', flush=True)
 
     while True:
         if random.random() < 0.75 or not open_trades:
@@ -20,7 +20,7 @@ def run_trader(trader):
             price = round(max(0.0, random.normalvariate(trader["mean"], trader["var"]), 2))
             size = int((random.uniform(50, 100) // 10) * 10)
 
-            print(f'Trader #{trader["num"]} submitting {direction} {size} @ {price}')
+            print(f'Trader #{trader["num"]} submitting {direction} {size} @ {price}', flush=True)
 
             res = requests.post(f'http://{trader["endpoint"]}/submit', json={
                 'owner': owner,
@@ -31,12 +31,12 @@ def run_trader(trader):
             })
 
             if res.status_code != 200:
-                print(f'Trader #{trader["num"]} SUBMIT ERROR\n{res.json()["errors"]}\n')
+                print(f'Trader #{trader["num"]} SUBMIT ERROR\n{res.json()["errors"]}', flush=True)
 
             open_trades = True
         else:
 
-            print(f'Trader #{trader["num"]} cancelling open orders.')
+            print(f'Trader #{trader["num"]} cancelling open orders.', flush=True)
 
             # cancel all open trades
             # first get the orders to cancel
@@ -44,11 +44,18 @@ def run_trader(trader):
                 'owner': owner,
                 'asset': trader["asset"],
             }
-            orders = requests.post(f'http://{trader["endpoint"]}/orders', json=data).json()
+
+            r = None
+            try:
+                r = requests.post(f'http://{trader["endpoint"]}/orders', json=data)
+                orders = r.json()
+            except:
+                print(f'Trader #{trader["num"]} ORDERS ERROR\n{r.text}\n', flush=True)
+                continue
 
             if 'orders' not in orders or orders['orders'] is None:
                 if len(orders['errors']):
-                    print(f'Trader #{trader["num"]} ORDERS ERROR\n{orders["errors"]}\n')
+                    print(f'Trader #{trader["num"]} ORDERS ERROR\n{orders["errors"]}\n', flush=True)
                 continue
 
             open_order_ids = map(lambda x: str(uuid.UUID(x[1])), filter(lambda x: x[5] == 'Opened', orders['orders']))
@@ -63,7 +70,7 @@ def run_trader(trader):
                 res = requests.post(f'http://{trader["endpoint"]}/cancel', json=data)
 
                 if res.status_code != 200:
-                    print(f'Trader #{trader["num"]} CANCEL ERROR\n{orders["errors"]}\n')
+                    print(f'Trader #{trader["num"]} CANCEL ERROR\n{orders["errors"]}\n', flush=True)
 
             open_trades = False
 
