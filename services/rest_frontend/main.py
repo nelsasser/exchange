@@ -246,7 +246,7 @@ def orders():
         FROM
             accounts
         WHERE
-            owner = %s AND asset = %s; 
+            owner_id = %s AND asset = %s; 
     """
 
     res = None
