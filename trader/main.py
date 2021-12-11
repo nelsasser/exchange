@@ -18,7 +18,7 @@ def run_trader(trader):
         if random.random() < 0.75 or not open_trades:
             # submit trade
             direction = 'Bid' if random.random() < 0.5 else 'Ask'
-            s = math.sin(((int(time.time() * 1e6) % 60) / 60) * 2 * math.pi) * 10
+            s = math.sin(((int(time.time() * 1e6) % 60) / 60) * 2 * math.pi) * 10 # mean should vary to +/- $10 every minute
             price = round(max(0.0, random.normalvariate(trader[f"{direction} mean"] + s, trader["var"])), 2)
             size = int((random.uniform(50, 100) // 10) * 10)
 
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     var = 5
     loop_delay = 0.1
 
-    num_traders = 10
+    num_traders = 100
 
     traders = [{
         'num': i,
