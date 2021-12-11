@@ -161,7 +161,7 @@ def _orders_mapper(order):
         float(order[3]),
         int(order[4]),
         str(order[5]),
-        int(order[6]),
+        str(order[6]),
         str(order[7]),
         str(order[8]),
     )
