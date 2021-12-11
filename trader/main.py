@@ -17,7 +17,7 @@ def run_trader(trader):
         if random.random() < 0.75 or not open_trades:
             # submit trade
             direction = 'Bid' if random.random() < 0.5 else 'Ask'
-            price = round(max(0.0, random.normalvariate(trader["mean"], trader["var"]), 2))
+            price = round(max(0.0, random.normalvariate(trader[f"{direction} mean"], trader["var"])), 2)
             size = int((random.uniform(50, 100) // 10) * 10)
 
             print(f'Trader #{trader["num"]} submitting {direction} {size} @ {price}', flush=True)
@@ -80,7 +80,8 @@ def run_trader(trader):
 if __name__ == '__main__':
     url = "34.68.113.9"
     name = 'AAPL'
-    mean = 100
+    bid_mean = 95
+    ask_mean = 105
     var = 5
     loop_delay = 1
 
@@ -90,7 +91,8 @@ if __name__ == '__main__':
         'num': i,
         'endpoint': url,
         'asset': name,
-        'mean': mean,
+        'Bid mean': bid_mean,
+        'Ask mean': ask_mean,
         'var': var,
         'loop_delay': loop_delay
     } for i in range(num_traders)]

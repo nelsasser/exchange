@@ -50,7 +50,7 @@ def callback(message):
 
         vol = int(fill_events[-1]['size'])
         ts = int((int(fill_events[0]['timestamp']) // (1000 * 60)) * 60 * 1000) # aggregate by the minute
-        price = sum(map(lambda x: float(x['price']) * float(x['size']), fill_events)) / float(vol)
+        price = sum(map(lambda x: float(x['price']) * float(x['size']), fill_events)) / (2 * float(vol))
 
         query = """
         INSERT INTO {}_price
