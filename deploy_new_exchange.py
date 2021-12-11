@@ -211,12 +211,12 @@ def create_price_table(name):
     insert_query = """
         CREATE table {}_price
         (
-            market_time int   not null,
+            market_time bigint   not null,
             low         float not null,
             high        float not null,
             open        float not null,
             close       float not null,
-            volume      int   not null,
+            volume      bigint   not null,
             constraint {}_price_pk
                 primary key (market_time)
         );
