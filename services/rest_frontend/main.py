@@ -155,9 +155,9 @@ def _parse_timestamp(data, errs, name=None):
 
 def _orders_mapper(order):
     return (
-        str(uuid.UUID(str(order[0]))),
-        str(uuid.UUID(str(order[1]))),
-        str(uuid.UUID(str(order[2]))) if order[2] else None,
+        str(uuid.UUID(int=int(order[0]))),
+        str(uuid.UUID(int=int(order[1]))),
+        str(uuid.UUID(int=int(order[2]))) if order[2] else None,
         float(order[3]),
         int(order[4]),
         str(order[5]),
