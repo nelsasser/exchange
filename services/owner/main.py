@@ -51,7 +51,7 @@ def callback(message):
 
         price = float(event['price']) if 'price' in event else 1.0
         size = int(event['size']) if 'size' in event else 1
-        direction = event.get('direction', 'TEMP') # can be None if it is a filled or canceled eveny
+        direction = event.get('direction', 'TEMP') # can be None if it is a filled or canceled event
         parent = uuid.UUID(event['parent']).int if event['parent'] else None
 
         query = """
@@ -60,9 +60,9 @@ def callback(message):
             VALUES
                 (%s, %s, %s, %s, %s, %s, %s, %s, DEFAULT)
             ON DUPLICATE KEY UPDATE
-                price = price * VALUES(price),
-                size = size * VALUES(size),
-                direction = IF(direction = 'TEMP', VALUES(direction), direction),
+                price = IF(VALUES(status) = 'Opened', VALUES(price), price),
+                size = IF(VALUES(status) = 'Opened', VALUES(size), size),
+                direction = IF(VALUES(status) = 'Opened', VALUES(direction), direction),
                 status = IF(status = 'Opened', VALUES(status), status), 
                 timestamp = NOW();
         """
