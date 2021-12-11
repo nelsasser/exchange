@@ -80,12 +80,12 @@ def run_trader(trader):
 if __name__ == '__main__':
     url = "34.68.113.9"
     name = 'AAPL'
-    bid_mean = 95
-    ask_mean = 105
+    bid_mean = 98
+    ask_mean = 102
     var = 5
-    loop_delay = 1
+    loop_delay = 0.1
 
-    num_traders = 3
+    num_traders = 10
 
     traders = [{
         'num': i,

@@ -6,7 +6,7 @@ use rust_decimal::prelude::{Decimal, Zero};
 use rand;
 use serde::{Serialize, Deserialize};
 
-use crate::orderbook::order::{timestamp, generate_uuid, OrderDirection, LimitOrder};
+use crate::orderbook::order::{timestamp, generate_uuid, OrderDirection, LimitOrder, timestamp_nanos};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BookRequest {
@@ -208,7 +208,7 @@ impl OrderBook {
         let ts = timestamp();
         match book_msg {
             BookRequest::Open(mut open_event) => {
-                open_event.uuid = Some(generate_uuid(&self.uuid_ctx, ts));
+                open_event.uuid = Some(generate_uuid(&self.uuid_ctx, ts, timestamp_nanos()));
                 open_event.timestamp = ts;
                 self.place_order(open_event)
             },
@@ -368,7 +368,7 @@ impl OrderBook {
 
             // return a new limit order to represent the remainder of the other order
             let replacement = LimitOrder{
-                id: generate_uuid(ctx, ts),
+                id: generate_uuid(ctx, ts, timestamp_nanos()),
                 parent: Some(order_match.id),
                 owner: order_match.owner,
                 price: order_match.price,
@@ -436,7 +436,7 @@ impl OrderBook {
         // generate a replacement order
         if remainder < order.size {
             partial_order_fill = Some(LimitOrder {
-                id: generate_uuid(ctx, ts),
+                id: generate_uuid(ctx, ts, timestamp_nanos()),
                 parent: Some(order.id),
                 owner: order.owner,
                 price: order.price,
