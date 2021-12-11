@@ -230,19 +230,19 @@ if __name__ == '__main__':
 
     credentials = service_account.Credentials.from_service_account_file(filename=keypath)
 
-    # print('Setting up topics')
-    # book_topic, events_topic = setup_topics(asset, credentials)
-    # print('Set up topics:', ', '.join([book_topic, events_topic]))
-    #
-    # print('Setting up bucket')
-    # bucket_name = setup_bucket(asset)
-    # print('Setup bucket:', bucket_name)
-    #
-    # print('Setting up event routes')
-    # events_bucket_route(asset, events_topic, bucket_name, credentials)
-    # events_price_route(asset, events_topic, bucket_name, credentials)
-    # events_account_route(asset, events_topic, bucket_name, credentials)
-    # print('Done setting up event routes')
+    print('Setting up topics')
+    book_topic, events_topic = setup_topics(asset, credentials)
+    print('Set up topics:', ', '.join([book_topic, events_topic]))
+
+    print('Setting up bucket')
+    bucket_name = setup_bucket(asset)
+    print('Setup bucket:', bucket_name)
+
+    print('Setting up event routes')
+    events_bucket_route(asset, events_topic, bucket_name, credentials)
+    events_price_route(asset, events_topic, bucket_name, credentials)
+    events_account_route(asset, events_topic, bucket_name, credentials)
+    print('Done setting up event routes')
 
     print('Setting up orderbook vm.')
     setup_orderbook(asset, credentials)
