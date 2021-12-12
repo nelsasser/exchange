@@ -296,7 +296,7 @@ def price():
                 {}_price
             WHERE
                 market_time >= %s AND market_times <= %s;
-        """.format(asset)
+        """.format(asset.lower())
 
         try:
             res = execute_sql(query, params=(start_time, end_time), mode='select', db='price')
@@ -306,9 +306,9 @@ def price():
 
     if len(errs):
         # return errors
-        return Response(json.dumps({'status': 'error', 'errors': errs, 'orders': res}), status=400, mimetype='application/json')
+        return Response(json.dumps({'status': 'error', 'errors': errs, 'price': res}), status=400, mimetype='application/json')
     else:
-        return Response(json.dumps({'status': 'success', 'errors': errs, 'orders': res}), status=200, mimetype='application/json')
+        return Response(json.dumps({'status': 'success', 'errors': errs, 'price': res}), status=200, mimetype='application/json')
 
 
 # start flask app
