@@ -295,7 +295,7 @@ def price():
             FROM
                 {}_price
             WHERE
-                market_time >= %s AND market_times <= %s;
+                market_time >= %s AND market_time <= %s;
         """.format(asset.lower())
 
         try:
