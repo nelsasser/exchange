@@ -87,7 +87,7 @@ if __name__ == '__main__':
     var = 5
     loop_delay = 0.1
 
-    num_traders = 2
+    num_traders = 10
 
     traders = [{
         'num': i,
