@@ -46,7 +46,7 @@ mod tests {
     use rust_decimal::prelude::Decimal;
 
     fn trader() -> Uuid {
-        generate_uuid(&Context::new(rand::random()), timestamp(), timestamp_nanos())
+        generate_uuid(0)
     }
 
     #[test]

@@ -10,12 +10,12 @@ pub fn timestamp() -> i64 {
     chrono::offset::Utc::now().timestamp()
 }
 
-pub fn timestamp_nanos() -> u32 {
-    chrono::offset::Utc::now().timestamp_subsec_nanos()
+pub fn timestamp_nanos() -> i64 {
+    chrono::offset::Utc::now().timestamp_nanos()
 }
 
-pub fn generate_uuid(ctx: &Context, timestamp: i64, timestamp_nanos: u32) -> Uuid {
-    let ts = Timestamp::from_unix(ctx, timestamp as u64, timestamp_nanos);
+pub fn generate_uuid(counter: u16) -> Uuid {
+   let ts = Timestamp::from_rfc4122((timestamp_nanos() / 100) as u64, counter);
     Uuid::new_v1(ts, &[0, 1, 2, 3, 4, 5]).expect("Failed to generate Uuid")
 }
 

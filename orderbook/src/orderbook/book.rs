@@ -1,12 +1,10 @@
 use std::collections::{BTreeMap, BTreeSet, btree_set};
 
-use uuid::v1::{Context};
 use uuid::Uuid;
 use rust_decimal::prelude::{Decimal, Zero};
-use rand;
 use serde::{Serialize, Deserialize};
 
-use crate::orderbook::order::{timestamp, generate_uuid, OrderDirection, LimitOrder, timestamp_nanos};
+use crate::orderbook::order::{timestamp, generate_uuid, OrderDirection, LimitOrder};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BookRequest {
@@ -123,9 +121,9 @@ struct Book {
 
 #[derive(Debug)]
 pub struct OrderBook {
-    uuid_ctx: Context,
     bid_book: Book,
     ask_book: Book,
+    counter: u16,
 }
 
 impl BookLevel {
@@ -198,17 +196,29 @@ impl Book {
 impl OrderBook {
     pub fn new() -> Self {
         OrderBook {
-            uuid_ctx: Context::new(rand::random()),
             bid_book: Book::new(),
             ask_book: Book::new(),
+            counter: 0,
         }
+    }
+
+    fn get_counter(&mut self) -> u16 {
+        let c = self.counter;
+
+        self.counter += 1;
+
+        return c;
+    }
+
+    fn set_counter(&mut self, counter: u16) {
+        self.counter = counter;
     }
 
     pub fn process_request(&mut self, book_msg: BookRequest) -> Vec<BookResult> {
         let ts = timestamp();
         match book_msg {
             BookRequest::Open(mut open_event) => {
-                open_event.uuid = Some(generate_uuid(&self.uuid_ctx, ts, timestamp_nanos()));
+                open_event.uuid = Some(generate_uuid(self.get_counter()));
                 open_event.timestamp = ts;
                 self.place_order(open_event)
             },
@@ -230,7 +240,7 @@ impl OrderBook {
         let mut filled_asks: BTreeMap<Decimal, Vec<Uuid>> = BTreeMap::new();
         let mut events: Vec<BookResult> = vec![self.bid_book.open_order(bid)];
 
-        let (bid_replacement, ask_replacement) = OrderBook::book_walk(&self.uuid_ctx, bid, &mut self.ask_book, &mut events, &mut filled_asks);
+        let (bid_replacement, ask_replacement) = self.book_walk( bid, &mut events, &mut filled_asks);
 
         // remove all filled asks
         filled_asks.iter().for_each(|(price_key, ids)| {
@@ -271,7 +281,7 @@ impl OrderBook {
         let mut filled_bids: BTreeMap<Decimal, Vec<Uuid>> = BTreeMap::new();
         let mut events: Vec<BookResult> = vec![self.ask_book.open_order(ask)];
 
-        let (ask_replacement, bid_replacement) = OrderBook::book_walk(&self.uuid_ctx, ask, &mut self.bid_book, &mut events, &mut filled_bids);
+        let (ask_replacement, bid_replacement) = self.book_walk(ask, &mut events, &mut filled_bids);
 
         // remove all filled bids
         filled_bids.iter().for_each(|(price_key, ids)| {
@@ -337,7 +347,7 @@ impl OrderBook {
         vec![BookResult::Bounce(bounce_event)]
     }
 
-    fn calculate_fill(ctx: &Context, order_match: &LimitOrder, remainder: &mut Decimal, all_events: &mut Vec<BookResult>, filled_ids: &mut Vec<Uuid>, ts: i64) -> Option<LimitOrder> {
+    fn calculate_fill(order_match: &LimitOrder, remainder: &mut Decimal, all_events: &mut Vec<BookResult>, filled_ids: &mut Vec<Uuid>, ts: i64, counter: u16) -> Option<LimitOrder> {
         if order_match.size <= *remainder {
             // full fill of the order_match
             all_events.push(BookResult::Filled(FilledEvent{
@@ -368,7 +378,7 @@ impl OrderBook {
 
             // return a new limit order to represent the remainder of the other order
             let replacement = LimitOrder{
-                id: generate_uuid(ctx, ts, timestamp_nanos()),
+                id: generate_uuid(counter),
                 parent: Some(order_match.id),
                 owner: order_match.owner,
                 price: order_match.price,
@@ -385,16 +395,19 @@ impl OrderBook {
         }
     }
 
-    fn book_walk(ctx: &Context, order: LimitOrder, book: &mut Book, all_events: &mut Vec<BookResult>, filled_ids: &mut BTreeMap<Decimal, Vec<Uuid>>) -> (Option<LimitOrder>, Option<LimitOrder>) {
+    fn book_walk(&mut self, order: LimitOrder, all_events: &mut Vec<BookResult>, filled_ids: &mut BTreeMap<Decimal, Vec<Uuid>>) -> (Option<LimitOrder>, Option<LimitOrder>) {
         let ts = timestamp();
         let mut remainder = order.size;
         let mut partial_order_fill: Option<LimitOrder> = None;
         let mut partial_match_fill: Option<LimitOrder> = None;
 
+        let mut counter = self.get_counter();
+
         // Get the books that are compatible with trade in the correct price order
         // filter out any empty prices
         let level_iter: Vec<(&Decimal, &BookLevel)> = match order.direction {
             OrderDirection::Bid => {
+                let book= &self.ask_book;
                 // get the lowest priced offers first
                 book.price_books.iter().filter(
                     |(p, lvl)| {
@@ -404,6 +417,7 @@ impl OrderBook {
             OrderDirection::Ask => {
                 // reverse this iterator since we are walking down the bid orderbook
                 // so we want to get the highest bids first
+                let book = &self.bid_book;
                 book.price_books.iter().rev().filter(
                     |(p, lvl)| {
                         **p >= order.price && lvl.size > Decimal::zero()
@@ -416,7 +430,8 @@ impl OrderBook {
             for order_match in level.iter() {
                 let mut remove_ids = Vec::new();
 
-                partial_match_fill = OrderBook::calculate_fill(ctx, order_match, &mut remainder, all_events, &mut remove_ids, ts);
+                partial_match_fill = OrderBook::calculate_fill(order_match, &mut remainder, all_events, &mut remove_ids, ts, counter);
+                counter += 1;
 
                 filled_ids.insert(*price, remove_ids);
 
@@ -432,11 +447,13 @@ impl OrderBook {
             }
         }
 
+        self.set_counter(counter);
+
         // partially filled the submitting order
         // generate a replacement order
         if remainder < order.size {
             partial_order_fill = Some(LimitOrder {
-                id: generate_uuid(ctx, ts, timestamp_nanos()),
+                id: generate_uuid(self.get_counter()),
                 parent: Some(order.id),
                 owner: order.owner,
                 price: order.price,
