@@ -300,7 +300,6 @@ def price():
 
         try:
             res = execute_sql(query, params=(start_time, end_time), mode='select', db='price')
-            res = list(map(lambda x: (str(uuid.UUID(str(x[0]))), str(uuid.UUID(str(x[1]))))))
         except Exception as e:
             errs.append(str(e))
 
